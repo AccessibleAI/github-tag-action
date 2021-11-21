@@ -1,0 +1,18 @@
+name: 'Github Tag Bump'
+description: 'Bump and push git tag on merge'
+author: 'Eli Lasry'
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+outputs:
+  new_tag:
+    description: 'Generated tag'
+  tag:
+    description: 'The latest tag after running this action'
+  part:
+    description: 'The part of version which was bumped'
+  log:
+    description: 'Commit message that was commited'
+branding:
+  icon: 'git-merge'
+  color: 'purple'
