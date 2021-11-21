@@ -1,5 +1,5 @@
 name: 'Github Tag Bump'
-description: 'Bump and push git tag on merge'
+description: 'Bump and push git tag on commit/input msg'
 author: 'Eli Lasry'
 runs:
   using: 'docker'

@@ -1,21 +1,28 @@
-### Usage
+### Usage 
 
 ```Dockerfile
-name: Bump version
+name: Docker Image CI
+
 on:
   push:
-    branches:
-      - master
+  workflow_dispatch:
+    inputs:
+      msg:
+        description: "Msg instead of commit log"
+        required: true
+        default: 'false'
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-      with:
-        fetch-depth: '0'
+
     - name: Bump version and push tag
-      uses: AccessibleAI/github-tag-action@1.36.0
+      uses: AccessibleAI/github-tag-action@1.1.0
+      id: tag_bump
       env:
+        MSG: ${{ github.event.inputs.msg }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 #### Options

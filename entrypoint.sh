@@ -8,14 +8,19 @@ release_branches=${RELEASE_BRANCHES:-master,main}
 source=${SOURCE:-.}
 dryrun=${DRY_RUN:-false}
 initial_version=${INITIAL_VERSION:-0.0.0}
-tag_context=${TAG_CONTEXT:-repo}
 verbose=${VERBOSE:-true}
-dirty=${VERBOSE:-false}
-
+manually_triggered_msg=${MSG:-false}
+dirty="false"
+bumped="false"
+pre_release="true"
 cd ${GITHUB_WORKSPACE}/${source}
 current_branch=$(git rev-parse --abbrev-ref HEAD)
 suffix=${current_branch}
-log=$(git log -1 --pretty='%B')
+if [ "${manually_triggered_msg}" != "false" ]; then
+    log=${manually_triggered_msg}
+else
+    log=$(git log -1 --pretty='%B')
+fi
 
 echo "*** CONFIGURATION ***"
 echo -e "\tDEFAULT_BUMP: ${default_semvar_bump}"
@@ -24,12 +29,10 @@ echo -e "\tRELEASE_BRANCHES: ${release_branches}"
 echo -e "\tSOURCE: ${source}"
 echo -e "\tDRY_RUN: ${dryrun}"
 echo -e "\tINITIAL_VERSION: ${initial_version}"
-echo -e "\tTAG_CONTEXT: ${tag_context}"
+echo -e "\tMANUALLY_TRIGGERED_MSG: ${manually_triggered_msg}"
 echo -e "\tPRERELEASE_SUFFIX: ${suffix}"
 echo -e "\tVERBOSE: ${verbose}"
 
-bumped="false"
-pre_release="true"
 IFS=',' read -ra branch <<< "$release_branches"
 for b in "${branch[@]}"; do
     echo "Is $b a match for ${current_branch}"
@@ -62,7 +65,7 @@ case "$log" in
     *#prehotfix*    )  part="prerelease";;
     *#prerelease*   )  part="prerelease";;
     *#rc*           )  part="prerelease";;
-    *#dirty*        )  new="dirty-$(echo $RANDOM | md5sum | head -c 10)"; part="dirty";dirty="true";;
+    *#dirty*        )  part="dirty";dirty="true";;
     *#custom*       )  custom_tag=$(echo $log | cut -d "[" -f2 | cut -d "]" -f1);;
     *#none*         )  echo "Default bump was set to none. Skipping..."; echo ::set-output name=new_tag::$tag; echo ::set-output name=tag::$tag; exit 0;;
     * )
@@ -91,32 +94,35 @@ fi
 if [ -z "$tag" ]; then
     tag=${initial_version}
 fi
-
 # get current commit hash for tag
 tag_commit=$(git rev-list -n 1 $tag)
 
 # get current commit hash
 commit=$(git rev-parse HEAD)
-
-if [ "$tag_commit" == "$commit" ]; then
-    echo "No new commits since previous tag. Skipping..."
-    echo ::set-output name=tag::$tag
-    exit 0
+if [ "${manually_triggered_msg}" == "false" ]; then
+    if [ "$tag_commit" == "$commit" ]; then
+        echo "No new commits since previous tag. Skipping..."
+        echo ::set-output name=tag::$tag
+        exit 0
+    fi
 fi
+
 echo "semver -i $part $tag --preid $suffix"
 new=$(semver -i $part $tag --preid $suffix)
 
 if $pre_release && ! $dirty; then
     if ! grep -q $suffix <<< $new; then #if minor/major or first tag etc and no suffix now
-        if [[ $part == *"major"* ]]; then
+        if [[ "$part" == *"major"* ]]; then
             new="$new-$suffix"
         elif [[ "$part" =~ ^("minor"|"patch")$ ]]; then
-            new="$(semver -i $part $tag)-$suffix"
+            new="$(semver -i $part $new)-$suffix"
         fi
         # fi
     fi
 fi
-
+if $dirty; then
+    new="dirty-$(echo $RANDOM | md5sum | head -c 10)"; 
+fi
 if $with_v && ! $dirty
 then
     new="v$new"
