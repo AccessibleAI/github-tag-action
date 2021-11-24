@@ -81,7 +81,7 @@ echo "configure tag variable"
 if $pre_release; then
     tag=$(git for-each-ref --sort=-v:refname --format '%(refname:lstrip=2)' | grep -E "^v?[0-9]+\.[0-9]+\.[0-9]+(-$suffix.*)?$" | grep $suffix | head -n1)
     if [ -z "$tag" ]; then #get last from branch. if doesnt exist take last tag from main branch
-        tag=$(git for-each-ref --sort=-v:refname --format '%(refname:lstrip=2)' | grep -E "^v?[0-9]+\.[0-9]+\.[0-9]?$" | head -n1)
+        tag=$(git for-each-ref --sort=-v:refname --format '%(refname:lstrip=2)' | grep -E "^v?[0-9]+\.[0-9]+\.[0-9]?$" | head -n1); init_tag="true"
     fi
 elif ! $pre_release; then
     if [[ "$part" =~ ^("pre")$ ]]; then
@@ -112,12 +112,14 @@ new=$(semver -i $part $tag --preid $suffix)
 
 if $pre_release && ! $dirty; then
     if ! grep -q $suffix <<< $new; then #if minor/major or first tag etc and no suffix now
-        if [[ "$part" == *"major"* ]]; then
+        if [[ "$part" =~ ^("major"|"minor")$ ]]; then
             new="$new-$suffix"
-        elif [[ "$part" =~ ^("minor"|"patch")$ ]]; then
+        elif [[ "$init_tag" == "true" ]]; then
+            new="$new-$suffix"
+            echo "init tag for new branch."
+        elif [[ "$part" =~ ^("patch")$ ]]; then
             new="$(semver -i $part $new)-$suffix"
         fi
-        # fi
     fi
 fi
 if $dirty; then
