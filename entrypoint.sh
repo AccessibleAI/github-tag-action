@@ -182,6 +182,8 @@ if [ "${git_ref_posted}" = "refs/tags/${new}" ]; then
   echo "new_tag=$new"
   echo "tag=$tag"
   echo "part=$part"
+  echo ::set-output name=prerelease::$pre_release
+  echo "prerelease=$pre_release"
   exit 0
 else
   echo "::error::Tag was not created properly."
