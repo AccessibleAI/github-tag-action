@@ -3,6 +3,7 @@
 set -o pipefail
 # config
 default_semvar_bump=${DEFAULT_BUMP:-patch}
+prerelease_automatic_bump=${PRERELEASE_AUTOMATIC_BUMP:-false}
 with_v=${WITH_V:-true}
 release_branches=${RELEASE_BRANCHES:-master,main}
 source=${SOURCE:-.}
@@ -69,7 +70,7 @@ case "$log" in
     *#custom*       )  custom_tag=$(echo $log | cut -d "[" -f2 | cut -d "]" -f1);;
     *#none*         )  echo "Default bump was set to none. Skipping..."; echo ::set-output name=new_tag::$tag; echo ::set-output name=tag::$tag; exit 0;;
     * )
-        if [ "$default_semvar_bump" == "none" ] || $pre_release; then
+        if [ "$default_semvar_bump" == "none" ] || ($pre_release && ! $prerelease_automatic_bump); then
             echo "Default bump was set to none. Skipping..."; echo ::set-output name=new_tag::$tag; echo ::set-output name=tag::$tag; exit 0
         else
             part=$default_semvar_bump
