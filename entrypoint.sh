@@ -114,13 +114,16 @@ new=$(semver -i $part $tag --preid $suffix)
 
 if $pre_release && ! $dirty; then
     number=$(echo $tag | rev | cut -d "-" -f1)
-    if [[ "$init_tag" == "true" ]] || ! [[ $number =~ ^-?[0-9]+$ ]]; then
-        new="$tag-1"
+    if [[ "$init_tag" == "true" ]]; then
+        new="$tag-$suffix-1"
         echo "init tag for new branch."
+    elif  ! [[ $number =~ ^-?[0-9]+$ ]]; then
+        new="$tag-1"
+        echo "add number on tag"
     else
         number_plus=$(expr 1 + ${number})
-        number_length=${#${number}}
-        new=${${tag}:0:-${number_length}}${number_plus}
+        number_length=${#number}
+        new=${tag:0:-number_length}$number_plus
     fi
 fi
 if $dirty; then
