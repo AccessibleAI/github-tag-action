@@ -113,21 +113,20 @@ echo "semver -i $part $tag --preid $suffix"
 new=$(semver -i $part $tag --preid $suffix)
 
 if $pre_release && ! $dirty; then
-    if ! grep -q $suffix <<< $new; then #if minor/major or first tag etc and no suffix now
-        if [[ "$part" =~ ^("major")$ ]]; then
-            new="$new-$suffix"
-        elif [[ "$init_tag" == "true" ]]; then
-            new="$new-$suffix"
-            echo "init tag for new branch."
-        elif [[ "$part" =~ ^("patch"|"minor")$ ]]; then
-            new="$(semver -i $part $new)-$suffix"
-        fi
+    number=$(echo $tag | rev | cut -d "-" -f1)
+    if [[ "$init_tag" == "true" ]] || ! [[ $number =~ ^-?[0-9]+$ ]]; then
+        new="$tag-1"
+        echo "init tag for new branch."
+    else
+        number_plus=$(expr 1 + ${number})
+        number_length=${#${number}}
+        new=${${tag}:0:-${number_length}}${number_plus}
     fi
 fi
 if $dirty; then
     new="dirty-$suffix-$(echo $RANDOM | md5sum | head -c 10)";
 fi
-if $with_v && ! $dirty
+if $with_v && ! $dirty && ! [[ ${new::1} == "v" ]]
 then
     new="v$new"
 fi
