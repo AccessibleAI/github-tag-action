@@ -25,6 +25,7 @@ fi
 
 echo "*** CONFIGURATION ***"
 echo -e "\tDEFAULT_BUMP: ${default_semvar_bump}"
+echo -e "\PRERELEASE_AUTOMATIC_BUMP: ${PRERELEASE_AUTOMATIC_BUMP}"
 echo -e "\tWITH_V: ${with_v}"
 echo -e "\tRELEASE_BRANCHES: ${release_branches}"
 echo -e "\tSOURCE: ${source}"
@@ -37,13 +38,13 @@ echo -e "\tVERBOSE: ${verbose}"
 IFS=',' read -ra branch <<< "$release_branches"
 for b in "${branch[@]}"; do
     echo "Is $b a match for ${current_branch}"
-    if [[ "${current_branch}" =~ $b ]]
+    if [[ "${current_branch}" == $b ]]
     then
         pre_release="false"
         suffix="rc"
     fi
 done
-echo "pre_release = $pre_release - branch is not master/main"
+echo "pre_release = $pre_release - branch is ${current_branch}"
 
 # fetch tags
 git fetch --tags
