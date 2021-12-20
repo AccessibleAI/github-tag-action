@@ -113,7 +113,7 @@ echo "semver -i $part $tag --preid $suffix"
 new=$(semver -i $part $tag --preid $suffix)
 
 if $pre_release && ! $dirty; then
-    number=$(echo $tag | rev | cut -d "-" -f1)
+    number=$(echo $tag | rev | cut -d "-" -f1 | rev)
     if [[ "$init_tag" == "true" ]]; then
         new="$tag-$suffix-1"
         echo "init tag for new branch."
