@@ -81,7 +81,7 @@ esac
 # get latest tag that looks like a semver (with or without v)
 echo "configure tag variable"
 if $pre_release; then
-    tag=$(git for-each-ref --sort=-v:refname --format '%(refname:lstrip=2)' | grep -E "^v?[0-9]+\.[0-9]+\.[0-9]+(-$suffix.*)?$" | grep -w $suffix | head -n1)
+    tag=$(git for-each-ref --sort='creatordate'  --format '%(refname:lstrip=2)' | grep -E "^v?[0-9]+\.[0-9]+\.[0-9]+(-$suffix-)+[0-9]" | tail -n1)
     if [ -z "$tag" ]; then #get last from branch. if doesnt exist take last tag from main branch
         tag=$(git for-each-ref --sort=-v:refname --format '%(refname:lstrip=2)' | grep -E "^v?[0-9]+\.[0-9]+\.[0-9]+?$" | head -n1); init_tag="true"
     fi
