@@ -19,6 +19,8 @@ current_branch=$(git rev-parse --abbrev-ref HEAD)
 suffix=${current_branch}
 if [ "${manually_triggered_msg}" != "false" ]; then
     log=${manually_triggered_msg}
+elif $dryrun; then
+    log=${default_semvar_bump}
 else
     log=$(git log -1 --pretty='%B')
 fi
@@ -101,7 +103,7 @@ tag_commit=$(git rev-list -n 1 $tag)
 
 # get current commit hash
 commit=$(git rev-parse HEAD)
-if [ "${manually_triggered_msg}" == "false" ]; then
+if [ "${manually_triggered_msg}" == "false" ] && ! ${dryrun}; then
     if [ "$tag_commit" == "$commit" ]; then
         echo "No new commits since previous tag. Skipping..."
         echo ::set-output name=tag::$tag
@@ -139,7 +141,6 @@ then
     new="$custom_tag"
 fi
 
-echo -e "Bumping Tag ${tag} \n\tNew tag ${new}"
 
 # set outputs
 echo ::set-output name=tag::$tag
@@ -150,10 +151,9 @@ echo ::set-output name=part::$part
 # use dry run to determine the next tag
 if $dryrun
 then
-    echo ::set-output name=tag::$tag
     exit 0
 fi
-
+echo -e "Bumping Tag ${tag} \n\tNew tag ${new}"
 # create local git tag
 git tag $new
 
