@@ -147,6 +147,7 @@ echo ::set-output name=tag::$tag
 echo ::set-output name=new_tag::$new
 echo ::set-output name=log::$log
 echo ::set-output name=part::$part
+echo ::set-output name=prerelease::$pre_release
 
 # use dry run to determine the next tag
 if $dryrun
@@ -163,19 +164,10 @@ full_name=$GITHUB_REPOSITORY
 git_refs_url=$(jq .repository.git_refs_url $GITHUB_EVENT_PATH | tr -d '"' | sed 's/{\/sha}//g')
 
 echo "$dt: **pushing tag $new to repo $full_name"
-
-git_refs_response=$(
-curl -s -X POST $git_refs_url \
--H "Authorization: token $GITHUB_TOKEN" \
--d @- << EOF
-
-{
-  "ref": "refs/tags/$new",
-  "sha": "$commit"
-}
-EOF
-)
-
+git_refs_response=$(curl -s -X POST $git_refs_url -H "Authorization: token $GITHUB_TOKEN" -d "{\"ref\": \"refs/tags/$new\",\"sha\": \"$commit\" }")
+if [ "${git_ref_posted}" != "refs/tags/${new}" ]; then
+    git_refs_response=$(curl -s -X PATCH $git_refs_url/tags/$new -H "Authorization: token $GITHUB_TOKEN" -d "{ \"sha\": \"$commit\",\"force\": true }")
+fi
 git_ref_posted=$( echo "${git_refs_response}" | jq .ref | tr -d '"' )
 
 echo "::debug::${git_refs_response}"
